@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"gioui.org/app"
-	"gioui.org/io/system"
-	"gioui.org/layout"
 	"gioui.org/op"
 	"keltas/schedule"
 	"keltas/window"
@@ -33,12 +31,11 @@ func run(w *app.Window) error {
 	}()
 
 	for {
-		e := <-w.Events()
-		switch e := e.(type) {
-		case system.DestroyEvent:
+		switch e := w.Event().(type) {
+		case app.DestroyEvent:
 			return e.Err
-		case system.FrameEvent:
-			gtx := layout.NewContext(&ops, e)
+		case app.FrameEvent:
+			gtx := app.NewContext(&ops, e)
 			paint(gtx)
 			e.Frame(gtx.Ops)
 		}

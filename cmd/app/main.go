@@ -9,7 +9,7 @@ import (
 
 func main() {
 	go func() {
-		if err := run(app.NewWindow()); err != nil {
+		if err := run(new(app.Window)); err != nil {
 			log.Fatal(err)
 		}
 		os.Exit(0)

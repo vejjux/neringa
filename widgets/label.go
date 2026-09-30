@@ -1,7 +1,9 @@
 package widgets
 
 import (
+	"gioui.org/font"
 	"gioui.org/layout"
+	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/text"
@@ -13,13 +15,13 @@ import (
 )
 
 type Label struct {
-	Font       text.Font
+	Font       font.Font
 	Color      color.NRGBA
 	Background color.NRGBA
 	Alignment  text.Alignment
 	Text       string
 	TextSize   unit.Sp
-	shaper     text.Shaper
+	shaper     *text.Shaper
 }
 
 func (l Label) Layout(gtx layout.Context) (dims layout.Dimensions) {
@@ -28,9 +30,10 @@ func (l Label) Layout(gtx layout.Context) (dims layout.Dimensions) {
 		Max: image.Point{X: gtx.Constraints.Max.X, Y: gtx.Sp(l.TextSize + 4)},
 	}.Op())
 
+	m := op.Record(gtx.Ops)
 	paint.ColorOp{Color: l.Color}.Add(gtx.Ops)
 	tl := widget.Label{Alignment: l.Alignment, MaxLines: 1}
-	dims = tl.Layout(gtx, l.shaper, l.Font, l.TextSize, l.Text)
+	dims = tl.Layout(gtx, l.shaper, l.Font, l.TextSize, l.Text, m.Stop())
 
 	return
 }

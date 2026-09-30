@@ -2,9 +2,7 @@ package window
 
 import (
 	"fmt"
-	"gioui.org/font/gofont"
 	"gioui.org/layout"
-	"gioui.org/widget/material"
 	"keltas/schedule"
 	"keltas/widgets"
 	ui "keltas/window/schedule"
@@ -18,7 +16,7 @@ func Schedule(f schedule.Ferry) func(gtx layout.Context) {
 	rhR := f.Schedules[0]
 
 	return func(gtx layout.Context) {
-		th := material.NewTheme(gofont.Collection())
+		th := newTheme()
 		title := layout.Rigid(ui.Title(th, f.Title))
 		dir1 := layout.Rigid(ui.Direction(th, shL.Title))
 		dir2 := layout.Rigid(ui.Direction(th, rhR.Title))

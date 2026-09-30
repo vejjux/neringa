@@ -1,6 +1,7 @@
 package schedule
 
 import (
+	"gioui.org/font"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget/material"
@@ -12,6 +13,6 @@ func Direction(th *material.Theme, value string) layout.Widget {
 	label.Color = colorDark
 	label.Background = colorLight
 	label.Alignment = text.Middle
-	label.Font.Weight = text.UltraBlack
+	label.Font.Weight = font.Black
 	return label.Layout
 }
