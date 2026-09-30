@@ -18,6 +18,7 @@ func proxy(target string) http.Handler {
 func main() {
 	http.Handle("/tvarkarastis/", proxy("https://keltas.lt"))
 	http.Handle("/lt/tvarkarastis.php", proxy("http://www.kopos.lt"))
+	http.Handle("/v1/", proxy("https://api.meteo.lt"))
 	http.Handle("/", http.FileServer(http.Dir("web")))
 	log.Fatal(http.ListenAndServe("localhost:8080", nil))
 }

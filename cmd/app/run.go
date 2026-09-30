@@ -6,6 +6,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/op"
 	"keltas/schedule"
+	"keltas/weather"
 	"keltas/window"
 	"syscall/js"
 )
@@ -15,7 +16,6 @@ func run(w *app.Window) error {
 
 	bar := window.NewBar()
 	home := window.NewHome()
-	empty := func(gtx layout.Context) {}
 	origin := js.Global().Get("location").Get("origin").String()
 	paint := window.Loading()
 	go func() {
@@ -48,13 +48,26 @@ func run(w *app.Window) error {
 		kautra = window.Bus(bus, home)
 	}()
 
+	oras := window.Loading()
+	go func() {
+		defer w.Invalidate()
+
+		forecasts, err := weather.Fetch(origin, weather.Places...)
+		if err != nil {
+			oras = window.Error(err)
+			return
+		}
+
+		oras = window.NewWeather(forecasts, home).Layout
+	}()
+
 	for {
 		switch e := w.Event().(type) {
 		case app.DestroyEvent:
 			return e.Err
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
-			pages := []func(layout.Context){home.Layout, paint, kautra, empty}
+			pages := []func(layout.Context){home.Layout, paint, kautra, oras}
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 					gtx.Constraints.Min = gtx.Constraints.Max
