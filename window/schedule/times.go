@@ -7,14 +7,13 @@ import (
 	"gioui.org/text"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
-	"image/color"
 	"keltas/schedule"
 	"keltas/widgets"
 )
 
 func Times(th *material.Theme, times []schedule.Time) layout.Widget {
 	labels := make([]layout.FlexChild, 0, len(times))
-	for _, t := range times {
+	for i, t := range times {
 		hour := widgets.NewLabel(th, 20, fmt.Sprintf(" %s: ", t.Hour))
 		hour.Color = ColorDark
 		hour.Font.Weight = font.Bold
@@ -24,6 +23,10 @@ func Times(th *material.Theme, times []schedule.Time) layout.Widget {
 		minutes.Color = ColorDark
 		minutes.Font.Weight = font.Bold
 		minutes.Alignment = text.Start
+
+		if i%2 == 1 {
+			hour.Background, minutes.Background = ColorStripe, ColorStripe
+		}
 
 		labels = append(labels, layout.Rigid(
 			func(gtx layout.Context) layout.Dimensions {
@@ -44,9 +47,9 @@ func Times(th *material.Theme, times []schedule.Time) layout.Widget {
 		}
 
 		widget.Border{
-			Color:        color.NRGBA{A: 0xFF},
+			Color:        ColorBorder,
 			CornerRadius: 0,
-			Width:        1,
+			Width:        3,
 		}.Layout(gtx, flexWidget)
 
 		return

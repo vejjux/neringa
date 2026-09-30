@@ -9,7 +9,6 @@ import (
 	"gioui.org/widget"
 	"gioui.org/widget/material"
 	"image"
-	"image/color"
 	"keltas/weather"
 	"keltas/widgets"
 	ui "keltas/window/schedule"
@@ -66,7 +65,7 @@ func (w *Weather) Layout(gtx layout.Context) {
 
 func border(gtx layout.Context, size image.Point) {
 	gtx.Constraints = layout.Exact(size)
-	widget.Border{Color: color.NRGBA{A: 0xFF}, Width: 1}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+	widget.Border{Color: ui.ColorBorder, Width: 3}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		return layout.Dimensions{Size: size}
 	})
 }
@@ -82,14 +81,15 @@ func (w *Weather) hour(hours []weather.Hour, i int) layout.Widget {
 	hour.Font.Weight = font.Bold
 	hour.Alignment = text.Start
 
-	value := fmt.Sprintf("%d° %s %d m/s", int(math.Round(h.Temperature)), compass[int(math.Round(h.WindDirection/45))%8], int(math.Round(h.WindSpeed)))
-	if h.Precipitation > 0 {
-		value += fmt.Sprintf(" %.1f mm", h.Precipitation)
-	}
+	value := fmt.Sprintf("%d° %s %d m/s %.1f mm", int(math.Round(h.Temperature)), compass[int(math.Round(h.WindDirection/45))%8], int(math.Round(h.WindSpeed)), h.Precipitation)
 	values := widgets.NewLabel(w.th, 16, value)
 	values.Color = ui.ColorDark
 	values.Font.Weight = font.Bold
 	values.Alignment = text.Start
+
+	if i%2 == 1 {
+		hour.Background, values.Background = ui.ColorStripe, ui.ColorStripe
+	}
 
 	return func(gtx layout.Context) layout.Dimensions {
 		return layout.Flex{Alignment: layout.Middle}.Layout(gtx, layout.Rigid(hour.Layout), layout.Rigid(values.Layout))
