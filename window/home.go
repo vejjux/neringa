@@ -46,7 +46,7 @@ func NewHome() *Home {
 	return h
 }
 
-func (h *Home) Layout(gtx layout.Context) {
+func (h *Home) Layout(gtx layout.Context, sections ...func(layout.Context)) {
 	if h.toggle.Clicked(gtx) {
 		h.open = !h.open
 	}
@@ -65,12 +65,23 @@ func (h *Home) Layout(gtx layout.Context) {
 	button.CornerRadius = 0
 	button.Background, button.Color = ui.ColorDark, ui.ColorLight
 
-	layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-		layout.Rigid(button.Layout),
+	children := []layout.FlexChild{layout.Rigid(button.Layout)}
+	if !h.open {
+		for _, section := range sections {
+			children = append(children, layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+				return layout.Inset{Top: 4}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					gtx.Constraints.Min = gtx.Constraints.Max
+					section(gtx)
+					return layout.Dimensions{Size: gtx.Constraints.Max}
+				})
+			}))
+		}
+		layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
+		return
+	}
+
+	layout.Flex{Axis: layout.Vertical}.Layout(gtx, append(children,
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			if !h.open {
-				return layout.Dimensions{}
-			}
 			return material.List(h.th, &h.list).Layout(gtx, len(Stops), func(gtx layout.Context, i int) layout.Dimensions {
 				option := material.Button(h.th, &h.options[i], Stops[i])
 				option.CornerRadius = 0
@@ -79,5 +90,5 @@ func (h *Home) Layout(gtx layout.Context) {
 				return option.Layout(gtx)
 			})
 		}),
-	)
+	)...)
 }

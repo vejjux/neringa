@@ -17,48 +17,49 @@ func run(w *app.Window) error {
 	bar := window.NewBar()
 	home := window.NewHome()
 	origin := js.Global().Get("location").Get("origin").String()
-	paint := window.Loading()
+	paint, keltasBox := window.Loading(), window.Loading()
 	go func() {
 		defer w.Invalidate()
 
 		ferries, err := schedule.Fetch(origin + "/tvarkarastis/")
 		if err != nil {
-			paint = window.Error(err)
+			paint, keltasBox = window.Error(err), window.Error(err)
 			return
 		}
 
 		if len(ferries) != 1 {
-			paint = window.Error(fmt.Errorf("no ferries found"))
+			err = fmt.Errorf("no ferries found")
+			paint, keltasBox = window.Error(err), window.Error(err)
 			return
 		}
 
-		paint = window.Schedule(ferries[0])
+		paint, keltasBox = window.Schedule(ferries[0]), window.Schedule(ferries[0].First(5))
 	}()
 
-	kautra := window.Loading()
+	kautra, kautraBox := window.Loading(), window.Loading()
 	go func() {
 		defer w.Invalidate()
 
 		bus, err := schedule.FetchBus(origin + "/lt/tvarkarastis.php")
 		if err != nil {
-			kautra = window.Error(err)
+			kautra, kautraBox = window.Error(err), window.Error(err)
 			return
 		}
 
-		kautra = window.Bus(bus, home)
+		kautra, kautraBox = window.Bus(bus, home), window.Bus(bus.First(5), home)
 	}()
 
-	oras := window.Loading()
+	oras, orasBox := window.Loading(), window.Loading()
 	go func() {
 		defer w.Invalidate()
 
 		forecasts, err := weather.Fetch(origin, weather.Places...)
 		if err != nil {
-			oras = window.Error(err)
+			oras, orasBox = window.Error(err), window.Error(err)
 			return
 		}
 
-		oras = window.NewWeather(forecasts, home).Layout
+		oras, orasBox = window.NewWeather(forecasts, home).Layout, window.NewWeather(weather.First(forecasts, 5), home).Layout
 	}()
 
 	for {
@@ -67,7 +68,8 @@ func run(w *app.Window) error {
 			return e.Err
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
-			pages := []func(layout.Context){home.Layout, paint, kautra, oras}
+			homePage := func(gtx layout.Context) { home.Layout(gtx, keltasBox, kautraBox, orasBox) }
+			pages := []func(layout.Context){homePage, paint, kautra, oras}
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 					gtx.Constraints.Min = gtx.Constraints.Max

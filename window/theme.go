@@ -6,8 +6,12 @@ import (
 	"gioui.org/widget/material"
 )
 
+var theme *material.Theme
+
 func newTheme() *material.Theme {
-	th := material.NewTheme()
-	th.Shaper = text.NewShaper(text.WithCollection(gofont.Collection()))
-	return th
+	if theme == nil {
+		theme = material.NewTheme()
+		theme.Shaper = text.NewShaper(text.WithCollection(gofont.Collection()))
+	}
+	return theme
 }
