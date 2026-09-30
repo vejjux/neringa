@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"gioui.org/app"
+	"gioui.org/layout"
 	"gioui.org/op"
 	"keltas/schedule"
 	"keltas/window"
@@ -12,6 +13,9 @@ import (
 func run(w *app.Window) error {
 	var ops op.Ops
 
+	bar := window.NewBar()
+	bar.Selected = 1
+	empty := func(gtx layout.Context) {}
 	paint := window.Loading()
 	go func() {
 		defer w.Invalidate()
@@ -36,7 +40,15 @@ func run(w *app.Window) error {
 			return e.Err
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
-			paint(gtx)
+			pages := []func(layout.Context){empty, paint, empty, empty}
+			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+					gtx.Constraints.Min = gtx.Constraints.Max
+					pages[bar.Selected](gtx)
+					return layout.Dimensions{Size: gtx.Constraints.Max}
+				}),
+				layout.Rigid(bar.Layout),
+			)
 			e.Frame(gtx.Ops)
 		}
 	}

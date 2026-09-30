@@ -16,12 +16,12 @@ func Times(th *material.Theme, times []schedule.Time) layout.Widget {
 	labels := make([]layout.FlexChild, 0, len(times))
 	for _, t := range times {
 		hour := widgets.NewLabel(th, 20, fmt.Sprintf(" %s: ", t.Hour))
-		hour.Color = colorDark
+		hour.Color = ColorDark
 		hour.Font.Weight = font.Bold
 		hour.Alignment = text.Start
 
 		minutes := widgets.NewLabel(th, 16, t.Minutes)
-		minutes.Color = colorDark
+		minutes.Color = ColorDark
 		minutes.Font.Weight = font.Bold
 		minutes.Alignment = text.Start
 

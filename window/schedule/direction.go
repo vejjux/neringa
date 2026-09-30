@@ -10,8 +10,8 @@ import (
 
 func Direction(th *material.Theme, value string) layout.Widget {
 	label := widgets.NewLabel(th, 14, value)
-	label.Color = colorDark
-	label.Background = colorLight
+	label.Color = ColorDark
+	label.Background = ColorLight
 	label.Alignment = text.Middle
 	label.Font.Weight = font.Black
 	return label.Layout
