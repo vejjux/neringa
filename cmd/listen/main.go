@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"sync"
 	"time"
 )
@@ -80,5 +81,9 @@ func main() {
 	http.Handle("/lt/tvarkarastis.php", proxy("http://www.kopos.lt"))
 	http.Handle("/v1/", proxy("https://api.meteo.lt"))
 	http.Handle("/", http.FileServer(http.Dir("web")))
-	log.Fatal(http.ListenAndServe("localhost:8080", nil))
+	addr := "localhost:8080"
+	if a := os.Getenv("NERINGA_LISTEN_ADDR"); a != "" {
+		addr = a
+	}
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
