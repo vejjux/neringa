@@ -28,9 +28,9 @@ func (b *Bar) Layout(gtx layout.Context) layout.Dimensions {
 		children[i] = layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			btn := material.Button(b.th, &b.buttons[i], barTitles[i])
 			btn.CornerRadius = 0
-			btn.Background, btn.Color = ui.ColorLight, ui.ColorDark
+			btn.Background, btn.Color = ui.ColorHeader, ui.ColorOnHeader
 			if i == b.Selected {
-				btn.Background, btn.Color = ui.ColorDark, ui.ColorLight
+				btn.Background, btn.Color = ui.ColorAccent, ui.ColorOnAccent
 			}
 			return btn.Layout(gtx)
 		})

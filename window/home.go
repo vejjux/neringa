@@ -63,7 +63,7 @@ func (h *Home) Layout(gtx layout.Context, sections ...func(layout.Context)) {
 	}
 	button := material.Button(h.th, &h.toggle, Stops[h.Selected]+arrow)
 	button.CornerRadius = 0
-	button.Background, button.Color = ui.ColorDark, ui.ColorLight
+	button.Background, button.Color = ui.ColorAccent, ui.ColorOnAccent
 
 	children := []layout.FlexChild{layout.Rigid(button.Layout)}
 	if !h.open {
@@ -85,7 +85,7 @@ func (h *Home) Layout(gtx layout.Context, sections ...func(layout.Context)) {
 			return material.List(h.th, &h.list).Layout(gtx, len(Stops), func(gtx layout.Context, i int) layout.Dimensions {
 				option := material.Button(h.th, &h.options[i], Stops[i])
 				option.CornerRadius = 0
-				option.Background, option.Color = ui.ColorLight, ui.ColorDark
+				option.Background, option.Color = ui.ColorHeader, ui.ColorOnHeader
 				gtx.Constraints.Min.X = gtx.Constraints.Max.X
 				return option.Layout(gtx)
 			})

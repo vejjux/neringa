@@ -5,9 +5,11 @@ import (
 	"gioui.org/app"
 	"gioui.org/layout"
 	"gioui.org/op"
+	"gioui.org/op/paint"
 	"keltas/schedule"
 	"keltas/weather"
 	"keltas/window"
+	ui "keltas/window/schedule"
 	"syscall/js"
 )
 
@@ -17,23 +19,23 @@ func run(w *app.Window) error {
 	bar := window.NewBar()
 	home := window.NewHome()
 	origin := js.Global().Get("location").Get("origin").String()
-	paint, keltasBox := window.Loading(), window.Loading()
+	keltas, keltasBox := window.Loading(), window.Loading()
 	go func() {
 		defer w.Invalidate()
 
 		ferries, err := schedule.Fetch(origin + "/tvarkarastis/")
 		if err != nil {
-			paint, keltasBox = window.Error(err), window.Error(err)
+			keltas, keltasBox = window.Error(err), window.Error(err)
 			return
 		}
 
 		if len(ferries) != 1 {
 			err = fmt.Errorf("no ferries found")
-			paint, keltasBox = window.Error(err), window.Error(err)
+			keltas, keltasBox = window.Error(err), window.Error(err)
 			return
 		}
 
-		paint, keltasBox = window.Schedule(ferries[0]), window.Schedule(ferries[0].First(5))
+		keltas, keltasBox = window.Schedule(ferries[0]), window.Schedule(ferries[0].First(5))
 	}()
 
 	kautra, kautraBox := window.Loading(), window.Loading()
@@ -68,8 +70,9 @@ func run(w *app.Window) error {
 			return e.Err
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
+			paint.Fill(gtx.Ops, ui.ColorBackground)
 			homePage := func(gtx layout.Context) { home.Layout(gtx, keltasBox, kautraBox, orasBox) }
-			pages := []func(layout.Context){homePage, paint, kautra, oras}
+			pages := []func(layout.Context){homePage, keltas, kautra, oras}
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 					gtx.Constraints.Min = gtx.Constraints.Max

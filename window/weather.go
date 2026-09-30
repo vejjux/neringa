@@ -77,13 +77,13 @@ func (w *Weather) hour(hours []weather.Hour, i int) layout.Widget {
 	h := hours[i]
 
 	hour := widgets.NewLabel(w.th, 20, fmt.Sprintf(" %s: ", h.Time.Local().Format("15")))
-	hour.Color = ui.ColorDark
+	hour.Color = ui.ColorTableText
 	hour.Font.Weight = font.Bold
 	hour.Alignment = text.Start
 
 	value := fmt.Sprintf("%d° %s %d m/s %.1f mm", int(math.Round(h.Temperature)), compass[int(math.Round(h.WindDirection/45))%8], int(math.Round(h.WindSpeed)), h.Precipitation)
 	values := widgets.NewLabel(w.th, 16, value)
-	values.Color = ui.ColorDark
+	values.Color = ui.ColorTableText
 	values.Font.Weight = font.Bold
 	values.Alignment = text.Start
 

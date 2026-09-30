@@ -9,7 +9,9 @@ import (
 
 func main() {
 	go func() {
-		if err := run(new(app.Window)); err != nil {
+		w := new(app.Window)
+		w.Option(app.Title("Neringa"))
+		if err := run(w); err != nil {
 			log.Fatal(err)
 		}
 		os.Exit(0)
