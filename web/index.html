@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Neringa</title>
-<meta name="theme-color" content="#00518B">
+<meta name="theme-color" content="#121212">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Neringa">
@@ -12,7 +14,7 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
 <style>
-html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #121212; }
 </style>
 <script>
 // Copyright 2018 The Go Authors. All rights reserved.
@@ -31,7 +33,7 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background:
 	if (!globalThis.fs) {
 		let outputBuf = "";
 		globalThis.fs = {
-			constants: { O_WRONLY: -1, O_RDWR: -1, O_CREAT: -1, O_TRUNC: -1, O_APPEND: -1, O_EXCL: -1 }, // unused
+			constants: { O_WRONLY: -1, O_RDWR: -1, O_CREAT: -1, O_TRUNC: -1, O_APPEND: -1, O_EXCL: -1, O_DIRECTORY: -1 }, // unused
 			writeSync(fd, buf) {
 				outputBuf += decoder.decode(buf);
 				const nl = outputBuf.lastIndexOf("\n");
@@ -87,6 +89,14 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background:
 			umask() { throw enosys(); },
 			cwd() { throw enosys(); },
 			chdir() { throw enosys(); },
+		}
+	}
+
+	if (!globalThis.path) {
+		globalThis.path = {
+			resolve(...pathSegments) {
+				return pathSegments.join("/");
+			}
 		}
 	}
 
@@ -225,10 +235,16 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background:
 				return decoder.decode(new DataView(this._inst.exports.mem.buffer, saddr, len));
 			}
 
+			const testCallExport = (a, b) => {
+				this._inst.exports.testExport0();
+				return this._inst.exports.testExport(a, b);
+			}
+
 			const timeOrigin = Date.now() - performance.now();
 			this.importObject = {
 				_gotest: {
 					add: (a, b) => a + b,
+					callExport: testCallExport,
 				},
 				gojs: {
 					// Go's SP does not change as long as no Go code is running. Some operations (e.g. calls, getters and setters)

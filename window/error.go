@@ -1,19 +1,17 @@
 package window
 
 import (
-	"gioui.org/font/gofont"
 	"gioui.org/layout"
 	"gioui.org/text"
 	"gioui.org/widget/material"
-	"image/color"
+	ui "keltas/window/schedule"
 )
 
 func Error(err error) func(gtx layout.Context) {
 	return func(gtx layout.Context) {
-		th := material.NewTheme(gofont.Collection())
+		th := newTheme()
 		title := material.H3(th, "Error:")
-		maroon := color.NRGBA{R: 127, G: 0, B: 0, A: 255}
-		title.Color = maroon
+		title.Color = ui.ColorError
 		title.Alignment = text.Middle
 		title.Layout(gtx)
 

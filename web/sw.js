@@ -9,7 +9,7 @@ self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
 
 self.addEventListener("fetch", e => {
   const u = new URL(e.request.url);
-  if (e.request.method !== "GET" || u.origin !== location.origin || u.pathname.startsWith("/tvarkarastis/")) return;
+  if (e.request.method !== "GET" || u.origin !== location.origin || /^\/(tvarkarastis|lt|v1)\//.test(u.pathname)) return;
   e.respondWith(caches.open(cache).then(async c => {
     const hit = await c.match(e.request);
     const net = fetch(e.request).then(r => {
