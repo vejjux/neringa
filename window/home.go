@@ -20,7 +20,7 @@ const (
 	homeKey       = "mano-namai"
 	dropdownWidth = unit.Dp(180)
 	homeGap       = unit.Dp(10)
-	tileMinSize   = unit.Dp(150)
+	tileMinSize   = unit.Dp(170)
 	tileRadius    = unit.Dp(12)
 	tilePadding   = unit.Dp(12)
 )
