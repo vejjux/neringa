@@ -59,11 +59,3 @@ func fetch(url string) (hours []Hour, err error) {
 	}
 	return hours, nil
 }
-
-func First(forecasts map[string][]Hour, n int) map[string][]Hour {
-	first := make(map[string][]Hour, len(forecasts))
-	for k, v := range forecasts {
-		first[k] = v[:min(n, len(v))]
-	}
-	return first
-}

@@ -1,7 +1,10 @@
 package window
 
 import (
+	"bytes"
+	_ "embed"
 	"image"
+	"image/png"
 
 	"gioui.org/layout"
 	"gioui.org/op"
@@ -16,10 +19,25 @@ import (
 const (
 	barInset       = unit.Dp(5)
 	barRadius      = unit.Dp(10)
+	barHeight      = unit.Dp(42)
 	barButtonWidth = unit.Dp(110)
+	barIconWidth   = unit.Dp(56)
+	barIconInset   = unit.Dp(6)
 )
 
+// barTitles names the pages; the first one, home, is shown as the app icon.
 var barTitles = [...]string{"Home", "Naujoji", "Senoji", "Autobusai", "Orai"}
+
+//go:embed icon.png
+var iconPNG []byte
+
+var icon = func() paint.ImageOp {
+	img, err := png.Decode(bytes.NewReader(iconPNG))
+	if err != nil {
+		panic(err)
+	}
+	return paint.NewImageOp(img)
+}()
 
 type Bar struct {
 	Selected int
@@ -32,36 +50,44 @@ func NewBar() *Bar {
 }
 
 func (b *Bar) Layout(gtx layout.Context) layout.Dimensions {
-	height := 0
 	children := make([]layout.FlexChild, len(b.buttons)+1)
 	for i := range b.buttons {
 		if b.buttons[i].Clicked(gtx) {
 			b.Selected = i
 		}
 		children[i] = layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			gtx.Constraints.Min.X = gtx.Dp(barButtonWidth)
-			gtx.Constraints.Max.X = gtx.Constraints.Min.X
+			width := barButtonWidth
+			if i == 0 {
+				width = barIconWidth
+			}
+			gtx.Constraints = layout.Exact(image.Pt(gtx.Dp(width), gtx.Dp(barHeight)))
+			background, color := ui.ColorHeader, ui.ColorOnHeader
+			if i == b.Selected {
+				background, color = ui.ColorAccent, ui.ColorOnAccent
+			}
+			if i == 0 {
+				btn := material.ButtonLayout(b.th, &b.buttons[i])
+				btn.CornerRadius = 0
+				btn.Background = background
+				return btn.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+					return layout.UniformInset(barIconInset).Layout(gtx, widget.Image{Src: icon, Fit: widget.Contain}.Layout)
+				})
+			}
 			btn := material.Button(b.th, &b.buttons[i], barTitles[i])
 			btn.CornerRadius = 0
-			btn.Background, btn.Color = ui.ColorHeader, ui.ColorOnHeader
-			if i == b.Selected {
-				btn.Background, btn.Color = ui.ColorAccent, ui.ColorOnAccent
-			}
-			dims := btn.Layout(gtx)
-			height = max(height, dims.Size.Y)
-			return dims
+			btn.Background, btn.Color = background, color
+			return btn.Layout(gtx)
 		})
 	}
 	children[len(b.buttons)] = layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-		size := image.Pt(gtx.Constraints.Max.X, height)
-		paint.FillShape(gtx.Ops, ui.ColorHeader, clip.Rect{Max: size}.Op())
-		return layout.Dimensions{Size: size}
+		return layout.Dimensions{Size: image.Pt(gtx.Constraints.Max.X, gtx.Dp(barHeight))}
 	})
 	return layout.UniformInset(barInset).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 		m := op.Record(gtx.Ops)
 		dims := layout.Flex{}.Layout(gtx, children...)
 		call := m.Stop()
 		defer clip.UniformRRect(image.Rectangle{Max: dims.Size}, gtx.Dp(barRadius)).Push(gtx.Ops).Pop()
+		paint.Fill(gtx.Ops, ui.ColorHeader)
 		call.Add(gtx.Ops)
 		return dims
 	})

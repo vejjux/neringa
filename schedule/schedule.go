@@ -1,6 +1,11 @@
 package schedule
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+)
 
 type Time struct {
 	Hour    string
@@ -17,34 +22,30 @@ type Ferry struct {
 	Schedules []Schedule
 }
 
-func (f Ferry) Upcoming(hour, n int) Ferry {
-	schedules := make([]Schedule, len(f.Schedules))
-	for i, s := range f.Schedules {
-		schedules[i] = Schedule{Title: s.Title, Table: upcoming(s.Table, hour, n)}
-	}
-	f.Schedules = schedules
-	return f
-}
-
-func (b Bus) Upcoming(hour, n int) Bus {
-	return Bus{ToSmiltyne: upcomingAll(b.ToSmiltyne, hour, n), ToNida: upcomingAll(b.ToNida, hour, n)}
-}
-
-func upcomingAll(stops map[string][]Time, hour, n int) map[string][]Time {
-	result := make(map[string][]Time, len(stops))
-	for k, v := range stops {
-		result[k] = upcoming(v, hour, n)
-	}
-	return result
-}
-
-func upcoming(table []Time, hour, n int) []Time {
-	i := 0
-	for ; i < len(table); i++ {
-		if h, err := strconv.Atoi(table[i].Hour); err != nil || h >= hour {
-			break
+// Next returns the next n departures in table at or after now as "15:04",
+// wrapping around to the start of the day.
+func Next(table []Time, now time.Time, n int) []string {
+	var all []int
+	for _, t := range table {
+		h, err := strconv.Atoi(t.Hour)
+		if err != nil {
+			continue
+		}
+		for _, m := range strings.Fields(t.Minutes) {
+			if m, err := strconv.Atoi(strings.TrimRight(m, "*D")); err == nil {
+				all = append(all, h*60+m)
+			}
 		}
 	}
-	rotated := append(append([]Time{}, table[i:]...), table[:i]...)
-	return rotated[:min(n, len(rotated))]
+	current := now.Hour()*60 + now.Minute()
+	i := 0
+	for i < len(all) && all[i] < current {
+		i++
+	}
+	var next []string
+	for k := 0; k < min(n, len(all)); k++ {
+		m := all[(i+k)%len(all)]
+		next = append(next, fmt.Sprintf("%02d:%02d", m/60, m%60))
+	}
+	return next
 }
