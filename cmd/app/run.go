@@ -11,6 +11,7 @@ import (
 	"keltas/window"
 	ui "keltas/window/schedule"
 	"syscall/js"
+	"time"
 )
 
 func run(w *app.Window) error {
@@ -35,7 +36,9 @@ func run(w *app.Window) error {
 			return
 		}
 
-		keltas, keltasBox = window.Schedule(ferries[0]), window.Schedule(ferries[0].First(5))
+		keltas, keltasBox = window.Schedule(ferries[0]), func(gtx layout.Context) {
+			window.Schedule(ferries[0].Upcoming(time.Now().Hour(), 5))(gtx)
+		}
 	}()
 
 	kautra, kautraBox := window.Loading(), window.Loading()
@@ -48,7 +51,9 @@ func run(w *app.Window) error {
 			return
 		}
 
-		kautra, kautraBox = window.Bus(bus, home), window.Bus(bus.First(5), home)
+		kautra, kautraBox = window.Bus(bus, home), func(gtx layout.Context) {
+			window.Bus(bus.Upcoming(time.Now().Hour(), 5), home)(gtx)
+		}
 	}()
 
 	oras, orasBox := window.Loading(), window.Loading()
