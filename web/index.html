@@ -595,6 +595,7 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background:
 </script>
 <script>
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+screen.orientation?.lock?.("portrait").catch(() => {});
 const go = new Go();
 WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then(r => go.run(r.instance));
 </script>

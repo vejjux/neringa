@@ -79,12 +79,12 @@ func run(w *app.Window) error {
 			homePage := func(gtx layout.Context) { home.Layout(gtx, keltasBox, kautraBox, orasBox) }
 			pages := []func(layout.Context){homePage, keltas, kautra, oras}
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
+				layout.Rigid(bar.Layout),
 				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 					gtx.Constraints.Min = gtx.Constraints.Max
 					pages[bar.Selected](gtx)
 					return layout.Dimensions{Size: gtx.Constraints.Max}
 				}),
-				layout.Rigid(bar.Layout),
 			)
 			e.Frame(gtx.Ops)
 		}
