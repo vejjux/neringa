@@ -1,13 +1,19 @@
 package main
 
 import (
+	"bufio"
+	"errors"
+	"io/fs"
 	"log"
 	"maps"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
+	"net/netip"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -76,6 +82,64 @@ func cache(h http.Handler) http.Handler {
 	})
 }
 
+// loadAllow reads one IP or CIDR per line; a missing file means allow all.
+func loadAllow(path string) ([]netip.Prefix, error) {
+	f, err := os.Open(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var allow []netip.Prefix
+	s := bufio.NewScanner(f)
+	for s.Scan() {
+		line := strings.TrimSpace(s.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if a, err := netip.ParseAddr(line); err == nil {
+			allow = append(allow, netip.PrefixFrom(a.Unmap(), a.Unmap().BitLen()))
+			continue
+		}
+		p, err := netip.ParsePrefix(line)
+		if err != nil {
+			return nil, errors.New(path + ": invalid entry " + line)
+		}
+		allow = append(allow, p.Masked())
+	}
+	return allow, s.Err()
+}
+
+type allowListener struct {
+	net.Listener
+	allow []netip.Prefix
+}
+
+func (l allowListener) Accept() (net.Conn, error) {
+	for {
+		c, err := l.Listener.Accept()
+		if err != nil {
+			return nil, err
+		}
+		if ap, err := netip.ParseAddrPort(c.RemoteAddr().String()); err == nil && l.allowed(ap.Addr().Unmap()) {
+			return c, nil
+		}
+		c.Close()
+	}
+}
+
+func (l allowListener) allowed(a netip.Addr) bool {
+	for _, p := range l.allow {
+		if p.Contains(a) {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 	http.Handle("/tvarkarastis/", proxy("https://keltas.lt"))
 	http.Handle("/lt/tvarkarastis.php", proxy("http://www.kopos.lt"))
@@ -85,5 +149,20 @@ func main() {
 	if a := os.Getenv("NERINGA_LISTEN_ADDR"); a != "" {
 		addr = a
 	}
-	log.Fatal(http.ListenAndServe(addr, nil))
+
+	allow, err := loadAllow("allow.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(allow) > 0 {
+		log.Printf("allowing %d entries from allow.txt", len(allow))
+		ln = allowListener{ln, allow}
+	} else {
+		log.Print("allowing all connections")
+	}
+	log.Fatal(http.ServeTLS(ln, nil, "cert.pem", "key.pem"))
 }

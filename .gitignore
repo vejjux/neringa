@@ -20,3 +20,6 @@
 # Go workspace file
 go.work
 web/main.wasm
+cert.pem
+key.pem
+allow.txt
