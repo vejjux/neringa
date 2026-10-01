@@ -19,7 +19,7 @@ const (
 	barButtonWidth = unit.Dp(110)
 )
 
-var barTitles = [...]string{"Home", "Keltai", "Autobusai", "Orai"}
+var barTitles = [...]string{"Home", "Naujoji", "Senoji", "Autobusai", "Orai"}
 
 type Bar struct {
 	Selected int

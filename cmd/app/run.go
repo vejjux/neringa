@@ -20,24 +20,32 @@ func run(w *app.Window) error {
 	bar := window.NewBar()
 	home := window.NewHome()
 	origin := js.Global().Get("location").Get("origin").String()
-	keltas, keltasBox := window.Loading(), window.Loading()
+	naujoji, naujojiBox := window.Loading(), window.Loading()
+	senojiFerry, kautraFromSmiltyne := window.Loading(), window.Loading()
 	go func() {
 		defer w.Invalidate()
 
 		ferries, err := schedule.Fetch(origin + "/tvarkarastis/")
-		if err != nil {
-			keltas, keltasBox = window.Error(err), window.Error(err)
-			return
-		}
-
-		if len(ferries) != 1 {
+		if err == nil && len(ferries) == 0 {
 			err = fmt.Errorf("no ferries found")
-			keltas, keltasBox = window.Error(err), window.Error(err)
+		}
+		if err != nil {
+			naujoji, naujojiBox, senojiFerry = window.Error(err), window.Error(err), window.Error(err)
 			return
 		}
 
-		keltas, keltasBox = window.Schedule(ferries[0]), func(gtx layout.Context) {
-			window.Schedule(ferries[0].Upcoming(time.Now().Hour(), 5))(gtx)
+		if f, err := schedule.Find(ferries, "NAUJOJI"); err != nil {
+			naujoji, naujojiBox = window.Error(err), window.Error(err)
+		} else {
+			naujoji, naujojiBox = window.Schedule(f), func(gtx layout.Context) {
+				window.Schedule(f.Upcoming(time.Now().Hour(), 5))(gtx)
+			}
+		}
+
+		if f, err := schedule.Find(ferries, "SENOJI"); err != nil {
+			senojiFerry = window.Error(err)
+		} else {
+			senojiFerry = window.Schedule(f)
 		}
 	}()
 
@@ -47,13 +55,14 @@ func run(w *app.Window) error {
 
 		bus, err := schedule.FetchBus(origin + "/lt/tvarkarastis.php")
 		if err != nil {
-			kautra, kautraBox = window.Error(err), window.Error(err)
+			kautra, kautraBox, kautraFromSmiltyne = window.Error(err), window.Error(err), window.Error(err)
 			return
 		}
 
 		kautra, kautraBox = window.Bus(bus, home), func(gtx layout.Context) {
 			window.Bus(bus.Upcoming(time.Now().Hour(), 5), home)(gtx)
 		}
+		kautraFromSmiltyne = window.BusFromSmiltyne(bus)
 	}()
 
 	oras, orasBox := window.Loading(), window.Loading()
@@ -76,8 +85,9 @@ func run(w *app.Window) error {
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
 			paint.Fill(gtx.Ops, ui.ColorBackground)
-			homePage := func(gtx layout.Context) { home.Layout(gtx, keltasBox, kautraBox, orasBox) }
-			pages := []func(layout.Context){homePage, keltas, kautra, oras}
+			homePage := func(gtx layout.Context) { home.Layout(gtx, naujojiBox, kautraBox, orasBox) }
+			senoji := window.Stack([]float32{2, 1}, senojiFerry, kautraFromSmiltyne)
+			pages := []func(layout.Context){homePage, naujoji, senoji, kautra, oras}
 			layout.Flex{Axis: layout.Vertical}.Layout(gtx,
 				layout.Rigid(bar.Layout),
 				layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {

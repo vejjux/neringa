@@ -4,6 +4,7 @@ import (
 	"gioui.org/layout"
 	"gioui.org/widget"
 	"gioui.org/widget/material"
+	"keltas/schedule"
 	"keltas/storage"
 	ui "keltas/window/schedule"
 )
@@ -11,16 +12,16 @@ import (
 const homeKey = "mano-namai"
 
 var Stops = [...]string{
-	"Nidos gyvenvietės autobusų stotis",
+	schedule.Nida,
 	"G. D. Kuverto plento sankryža",
 	"T. Mano muziejus",
-	"Preilos gv.",
-	"Preilos gv. prie plento",
-	"Pervalkos gv.",
-	"Pervalkos gv. prie plento",
+	"Preila",
+	"Preila prie plento",
+	"Pervalka",
+	"Pervalka prie plento",
 	"Žvejų kaimelis",
 	"Raganų kalnas",
-	"Juodkrantės gv.",
+	"Juodkrantė",
 	"Gintaro įlanka",
 	"Alksnynė",
 }
@@ -37,7 +38,7 @@ type Home struct {
 func NewHome() *Home {
 	h := &Home{th: newTheme()}
 	h.list.Axis = layout.Vertical
-	saved := storage.Get(homeKey)
+	saved := schedule.StopName(storage.Get(homeKey))
 	for i, s := range Stops {
 		if s == saved {
 			h.Selected = i
@@ -67,16 +68,16 @@ func (h *Home) Layout(gtx layout.Context, sections ...func(layout.Context)) {
 
 	children := []layout.FlexChild{layout.Rigid(button.Layout)}
 	if !h.open {
-		for _, section := range sections {
-			children = append(children, layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-				return layout.Inset{Top: 4}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-					gtx.Constraints.Min = gtx.Constraints.Max
-					section(gtx)
-					return layout.Dimensions{Size: gtx.Constraints.Max}
-				})
-			}))
+		weights := make([]float32, len(sections))
+		for i := range weights {
+			weights[i] = 1
 		}
-		layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
+		layout.Flex{Axis: layout.Vertical}.Layout(gtx, append(children,
+			layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
+				Stack(weights, sections...)(gtx)
+				return layout.Dimensions{Size: gtx.Constraints.Max}
+			}),
+		)...)
 		return
 	}
 

@@ -27,11 +27,15 @@ func (f Ferry) Upcoming(hour, n int) Ferry {
 }
 
 func (b Bus) Upcoming(hour, n int) Bus {
-	there := make(map[string][]Time, len(b.There))
-	for k, v := range b.There {
-		there[k] = upcoming(v, hour, n)
+	return Bus{ToSmiltyne: upcomingAll(b.ToSmiltyne, hour, n), ToNida: upcomingAll(b.ToNida, hour, n)}
+}
+
+func upcomingAll(stops map[string][]Time, hour, n int) map[string][]Time {
+	result := make(map[string][]Time, len(stops))
+	for k, v := range stops {
+		result[k] = upcoming(v, hour, n)
 	}
-	return Bus{There: there, Back: upcoming(b.Back, hour, n)}
+	return result
 }
 
 func upcoming(table []Time, hour, n int) []Time {
