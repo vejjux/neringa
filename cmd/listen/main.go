@@ -142,7 +142,8 @@ func (l allowListener) allowed(a netip.Addr) bool {
 
 func main() {
 	http.Handle("/tvarkarastis/", proxy("https://keltas.lt"))
-	http.Handle("/lt/tvarkarastis.php", proxy("http://www.kopos.lt"))
+	http.Handle("/gyventojui/autobusu-tvarkarastis-ir-bilietu-kainos/63", proxy("https://neringa.lt"))
+	http.Handle("/data/public/uploads/", proxy("https://neringa.lt"))
 	http.Handle("/v1/", proxy("https://api.meteo.lt"))
 	http.Handle("/", http.FileServer(http.Dir("web")))
 	addr := "localhost:8080"

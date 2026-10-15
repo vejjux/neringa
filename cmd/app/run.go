@@ -54,7 +54,7 @@ func run(w *app.Window) error {
 	go func() {
 		defer w.Invalidate()
 
-		bus, err := schedule.FetchBus(origin + "/lt/tvarkarastis.php")
+		bus, err := schedule.FetchBus(origin)
 		if err != nil {
 			kautra, kautraFromSmiltyne, kautraTile = window.Error(err), window.Error(err), window.TileError(err)
 			return
