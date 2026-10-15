@@ -82,6 +82,15 @@ func cache(h http.Handler) http.Handler {
 	})
 }
 
+// noCache makes browsers revalidate every response, so a rebuilt main.wasm
+// is picked up right away; proxied responses keep their own Cache-Control.
+func noCache(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache")
+		h.ServeHTTP(w, r)
+	})
+}
+
 // loadAllow reads one IP or CIDR per line; a missing file means allow all.
 func loadAllow(path string) ([]netip.Prefix, error) {
 	f, err := os.Open(path)
@@ -165,5 +174,5 @@ func main() {
 	} else {
 		log.Print("allowing all connections")
 	}
-	log.Fatal(http.ServeTLS(ln, nil, "cert.pem", "key.pem"))
+	log.Fatal(http.ServeTLS(ln, noCache(http.DefaultServeMux), "cert.pem", "key.pem"))
 }
